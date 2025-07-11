@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-model_path = r'C:\Users\Lenovo\Desktop\Asset_Life_cycle_web\templates\asset_life.pkl'
+model_path = "asset_life.pkl"
 with open(model_path,'rb') as file:
     model = pickle.load(file)
 
