@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Asset Life Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+   
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      background: url("https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=80");
+
+
+
+
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+
+    .form-container {
+      background: rgba(0, 0, 0, 0.55);
+      padding: 40px;
+      border-radius: 16px;
+      width: 400px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+
+    input[type=number], input[type=text] {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type=number]::placeholder {
+      color: #e0e0e0;
+    }
+
+    input[type=submit] {
+      background-color: #00c9a7;
+      color: #fff;
+      padding: 12px;
+      margin-top: 25px;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s ease-in-out;
+    }
+
+    input[type=submit]:hover {
+      background-color: #00b894;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #dff9fb;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    .logout-button {
+      display: block;
+      margin: 30px auto 0;
+      padding: 10px 20px;
+      background-color: #ff6b6b;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 8px;
+      text-align: center;
+      transition: background-color 0.3s ease-in-out;
+    }
+
+    .logout-button:hover {
+      background-color: #ff4757;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Asset Life Predictor</h2>
+    <form action="/predict" method="post">
+      <label>Asset Age (years):</label>
+      <input type="number" name="asset_age_years" step="any" required>
+
+      <label>Total Usage Hours:</label>
+      <input type="number" name="total_usage_hours" step="any" required>
+
+      <label>Number of Repairs:</label>
+      <input type="number" name="num_repairs" step="1" required>
+
+      <label>Last Maintenance Gap (days):</label>
+      <input type="number" name="last_maintenance_gap_days" step="any" required>
+
+      <label>Performance Score:</label>
+      <input type="number" name="performance_score" step="any" required>
+
+      <input type="submit" value="Predict">
+    </form>
+
+    {% if prediction_text %}
+      <div class="result">{{ prediction_text }}</div>
+    {% endif %}
+
+    <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+  </div>
+</body>
+</html>
