@@ -32,6 +32,15 @@ def signup():
         username = request.form.get('username')
         password = request.form.get('password')
         cur = conn.cursor()
+        cur.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            full_name VARCHAR(100),
+            phone VARCHAR(20),
+            username VARCHAR(100) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL
+        )
+        ''')
         cur.execute("SELECT * FROM users WHERE username=%s",(username,))
         user = cur.fetchone()
         if user:
