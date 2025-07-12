@@ -2,8 +2,8 @@ from flask import Flask,render_template,jsonify,request,redirect,url_for,session
 import pickle
 import pandas as pd
 import numpy as np
-from flask_mysqldb import MySQL
 from dotenv import load_dotenv
+import psycopg2
 import os
 load_dotenv()
 
@@ -11,16 +11,19 @@ model_path = "asset_life.pkl"
 with open(model_path,'rb') as file:
     model = pickle.load(file)
 
-app= Flask(__name__)
+app= Flask(__name__, template_folder='templates')
 app.secret_key = "SanathWonder2466"
 
-# MySQL configuration
-app.config['MYSQL_HOST'] = os.getenv('DB_HOST')
-app.config['MYSQL_USER'] = os.getenv('DB_USER')
-app.config['MYSQL_PASSWORD'] = os.getenv('DB_PASSWORD')
-app.config['MYSQL_DB'] = os.getenv('DB_NAME')
+# postgress SQL 
 
-mysql = MySQL(app)
+conn = psycopg2.connect(
+    host=os.getenv('PGHOST'),
+    port=os.getenv('PGPORT'),
+    user=os.getenv('PGUSER'),
+    password=os.getenv('PGPASSWORD'),
+    dbname=os.getenv('PGDATABASE')
+)
+
 @app.route('/signup',methods=['GET','POST'])
 def signup():
     if request.method == 'POST':
@@ -28,7 +31,7 @@ def signup():
         phone = request.form.get('phone_number')
         username = request.form.get('username')
         password = request.form.get('password')
-        cur = mysql.connection.cursor()
+        cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE username=%s",(username,))
         user = cur.fetchone()
         if user:
@@ -36,7 +39,7 @@ def signup():
             return render_template("signup.html")  
         cur.execute("INSERT INTO users(full_name,phone,username,password) VALUES(%s,%s,%s,%s)",
                     (full_name,phone,username,password))
-        mysql.connection.commit()
+        conn.commit()
         cur.close()
         flash("Signup Successful.Please login")
         return redirect(url_for('login'))
@@ -46,7 +49,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        cur = mysql.connection.cursor()
+        cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE username=%s AND password=%s", (username, password))
 
         user = cur.fetchone()
