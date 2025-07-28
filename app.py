@@ -2,28 +2,58 @@ from flask import Flask,render_template,jsonify,request,redirect,url_for,session
 import pickle
 import pandas as pd
 import numpy as np
+from flask_mysqldb import MySQL
 from dotenv import load_dotenv
-import psycopg2
 import os
-load_dotenv()
+#langchain-setup
+from flask_cors import CORS
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_openai import ChatOpenAI,OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain.chains import RetrievalQA
 
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
 model_path = "asset_life.pkl"
 with open(model_path,'rb') as file:
     model = pickle.load(file)
 
-app= Flask(__name__, template_folder='templates')
+app= Flask(__name__)
 app.secret_key = "SanathWonder2466"
+CORS(app) # 
+loader = PyPDFLoader(r"C:\Users\Lenovo\Desktop\Asset_Life_cycle_web\Asset Chatbot.pdf")
+docs = loader.load()
 
-# postgress SQL 
 
-conn = psycopg2.connect(
-    host=os.getenv('PGHOST'),
-    port=os.getenv('PGPORT'),
-    user=os.getenv('PGUSER'),
-    password=os.getenv('PGPASSWORD'),
-    dbname=os.getenv('PGDATABASE')
+splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=200)
+chunks = splitter.split_documents(docs)
+
+# create chromdb
+db = Chroma.from_documents(chunks,embedding=OpenAIEmbeddings())
+retriever = db.as_retriever()
+
+# 4. Create QA Chain
+qa = RetrievalQA.from_chain_type(
+    llm=ChatOpenAI(model="gpt-3.5-turbo"),
+    chain_type="stuff",
+    retriever=retriever
 )
 
+
+@app.route("/chat",methods=["POST"])
+def chat():
+    user_msg = request.json["message"]
+    result=qa.run(user_msg)
+    return jsonify({"reply":result})
+
+# MySQL configuration
+app.config['MYSQL_HOST'] = os.getenv('DB_HOST')
+app.config['MYSQL_USER'] = os.getenv('DB_USER')
+app.config['MYSQL_PASSWORD'] = os.getenv('DB_PASSWORD')
+app.config['MYSQL_DB'] = os.getenv('DB_NAME')
+
+mysql = MySQL(app)
 @app.route('/signup',methods=['GET','POST'])
 def signup():
     if request.method == 'POST':
@@ -31,16 +61,7 @@ def signup():
         phone = request.form.get('phone_number')
         username = request.form.get('username')
         password = request.form.get('password')
-        cur = conn.cursor()
-        cur.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            full_name VARCHAR(100),
-            phone VARCHAR(20),
-            username VARCHAR(100) UNIQUE NOT NULL,
-            password VARCHAR(255) NOT NULL
-        )
-        ''')
+        cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM users WHERE username=%s",(username,))
         user = cur.fetchone()
         if user:
@@ -48,7 +69,7 @@ def signup():
             return render_template("signup.html")  
         cur.execute("INSERT INTO users(full_name,phone,username,password) VALUES(%s,%s,%s,%s)",
                     (full_name,phone,username,password))
-        conn.commit()
+        mysql.connection.commit()
         cur.close()
         flash("Signup Successful.Please login")
         return redirect(url_for('login'))
@@ -58,7 +79,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        cur = conn.cursor()
+        cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM users WHERE username=%s AND password=%s", (username, password))
 
         user = cur.fetchone()
