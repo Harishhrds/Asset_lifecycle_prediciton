@@ -139,5 +139,124 @@
 
     <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
   </div>
+  <!-- Floating Chat Button -->
+<div id="chat-button" onclick="toggleChat()" style="
+position: fixed;
+bottom: 20px;
+right: 20px;
+z-index: 1000;
+background-color: #4CAF50;
+color: white;
+border-radius: 50%;
+width: 60px;
+height: 60px;
+font-size: 28px;
+text-align: center;
+line-height: 60px;
+cursor: pointer;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+transition: background-color 0.3s ease;
+">💬</div>
+
+<!-- Chat Box -->
+<div id="chat-window" style="
+display: none;
+position: fixed;
+bottom: 90px;
+right: 20px;
+width: 350px;
+height: 460px;
+background: #fff;
+border-radius: 10px;
+overflow: hidden;
+z-index: 1000;
+box-shadow: 0px 8px 20px rgba(0,0,0,0.3);
+font-family: 'Segoe UI', sans-serif;
+">
+<!-- Header -->
+<div style="
+  padding: 12px 15px;
+  background: #4CAF50;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+"> Asset Lifecycle Assistant</div>
+
+<!-- Chat Body -->
+<div id="chat-body" style="
+  height: 340px;
+  padding: 10px;
+  overflow-y: auto;
+  background: #f9f9f9;
+  font-size: 14px;
+"></div>
+
+<!-- Input Area -->
+<div style="display: flex; padding: 10px; background: #f9f9f9; border-top: 1px solid #ddd;">
+  <input type="text" id="user-input" placeholder="Type a question..." style="
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+    background-color: black;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+  " />
+  <button onclick="sendMessage()" style="
+    margin-left: 8px;
+    padding: 8px 14px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  ">Send</button>
+</div>
+</div>
+
+
+<script>
+  function toggleChat() {
+    const chatWindow = document.getElementById("chat-window");
+    chatWindow.style.display = chatWindow.style.display === "none" ? "block" : "none";
+  }
+
+  function sendMessage() {
+    const input = document.getElementById("user-input");
+    const message = input.value.trim();
+    if (!message) return;
+
+    const chatBody = document.getElementById("chat-body");
+    chatBody.innerHTML += `<div style=" background:green;
+  margin: 5px;
+  padding: 8px;
+  border-radius: 8px;"><b>You:</b> ${message}</div>`;
+    input.value = "";
+  // this message sent via post request to backend api
+    fetch("http://localhost:5000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log("Parsed response:", data);
+      chatBody.innerHTML += `<div style="background: black;
+  margin: 5px;
+  padding: 8px;
+  border-radius: 8px;"><b>assistant:</b> ${data.reply}</div>`;
+      chatBody.scrollTop = chatBody.scrollHeight;
+    });
+  }
+  document.getElementById("user-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault(); // prevent form submission or newline
+      sendMessage();      // call your existing function
+    }
+  });
+</script>
+
 </body>
 </html>
