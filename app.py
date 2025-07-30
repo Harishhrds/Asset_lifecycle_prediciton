@@ -13,6 +13,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import ChatOpenAI,OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
+import requests
+import tempfile
 
 
 load_dotenv()
@@ -24,7 +26,16 @@ with open(model_path,'rb') as file:
 app= Flask(__name__)
 app.secret_key = "SanathWonder2466"
 CORS(app) # 
-loader = PyPDFLoader("https://raw.githubusercontent.com/Harishhrds/Asset_lifecycle_prediciton/main/Asset%20Chatbot.pdf")
+
+def get_pdf_from_url(url):
+    response = requests.get(url)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(response.content)
+        tmp_path = tmp.name
+    return tmp_path
+pdf_url = "https://raw.githubusercontent.com/Harishhrds/Asset_lifecycle_prediciton/main/Asset%20Chatbot.pdf"
+pdf_path = get_pdf_from_url(pdf_url)
+loader = PyPDFLoader(pdf_path)
 
 docs = loader.load()
 
