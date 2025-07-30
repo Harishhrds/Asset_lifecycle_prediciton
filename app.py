@@ -14,6 +14,7 @@ from langchain_openai import ChatOpenAI,OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 
+
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 model_path = "asset_life.pkl"
@@ -23,7 +24,7 @@ with open(model_path,'rb') as file:
 app= Flask(__name__)
 app.secret_key = "SanathWonder2466"
 CORS(app) # 
-loader = PyPDFLoader("https://github.com/Harishhrds/Asset_lifecycle_prediciton/blob/main/Asset%20Chatbot.pdf")
+loader = PyPDFLoader("Asset Chatbot.pdf")
 docs = loader.load()
 
 
