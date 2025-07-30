@@ -13,7 +13,7 @@ app = Flask(__name__)
 CORS(app)
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
-loader = PyPDFLoader(r"C:\Users\Lenovo\Desktop\chatbot\Asset Chatbot.pdf")
+loader = PyPDFLoader("Asset Chatbot.pdf")
 docs = loader.load()
 
 
