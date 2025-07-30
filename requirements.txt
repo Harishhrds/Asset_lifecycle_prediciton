@@ -7,4 +7,8 @@ pandas
 scikit-learn
 psycopg2-binary
 flask-cors
-langchain_community
+langchain
+langchain-community
+langchain-openai
+chromadb
+PyPDF2
