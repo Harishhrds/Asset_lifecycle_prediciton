@@ -11,4 +11,4 @@ langchain
 langchain-community
 langchain-openai
 chromadb
-PyPDF2
+pypdf
