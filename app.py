@@ -22,7 +22,7 @@ with open(model_path,'rb') as file:
 app= Flask(__name__)
 app.secret_key = "SanathWonder2466"
 CORS(app) # 
-loader = PyPDFLoader(r"C:\Users\Lenovo\Desktop\Asset_Life_cycle_web\Asset Chatbot.pdf")
+loader = PyPDFLoader("Asset Chatbot.pdf")
 docs = loader.load()
 
 
