@@ -7,3 +7,4 @@ pandas
 scikit-learn
 psycopg2-binary
 flask-cors
+langchain_community
