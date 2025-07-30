@@ -1,75 +1,34 @@
-from flask import Flask,render_template,jsonify,request,redirect,url_for,session,flash
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session, flash
 import pickle
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
 import psycopg2
 import os
-load_dotenv()
-#langchain-setup
-from flask_cors import CORS
-from langchain_community.document_loaders import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import ChatOpenAI,OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
-from langchain.chains import RetrievalQA
 import requests
 import tempfile
 
+# LangChain setup
+from flask_cors import CORS
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain.chains import RetrievalQA
 
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
+
+app = Flask(__name__, template_folder='templates')
+app.secret_key = "SanathWonder2466"
+CORS(app)
+
+# Load ML model
 model_path = "asset_life.pkl"
-with open(model_path,'rb') as file:
+with open(model_path, 'rb') as file:
     model = pickle.load(file)
 
-app= Flask(__name__)
-app.secret_key = "SanathWonder2466"
-CORS(app) # 
-
-def get_pdf_from_url(url):
-    response = requests.get(url)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(response.content)
-        tmp_path = tmp.name
-    return tmp_path
-pdf_url = "https://raw.githubusercontent.com/Harishhrds/Asset_lifecycle_prediciton/main/Asset%20Chatbot.pdf"
-pdf_path = get_pdf_from_url(pdf_url)
-loader = PyPDFLoader(pdf_path)
-
-docs = loader.load()
-
-
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=200)
-chunks = splitter.split_documents(docs)
-
-# create chromdb
-db = Chroma.from_documents(chunks,embedding=OpenAIEmbeddings())
-retriever = db.as_retriever()
-
-# 4. Create QA Chain
-qa = RetrievalQA.from_chain_type(
-    llm=ChatOpenAI(model="gpt-3.5-turbo"),
-    chain_type="stuff",
-    retriever=retriever
-)
-
-
-@app.route("/chat",methods=["POST"])
-def chat():
-    user_msg = request.json["message"]
-    result=qa.run(user_msg)
-    return jsonify({"reply":result})
-
-model_path = "asset_life.pkl"
-with open(model_path,'rb') as file:
-    model = pickle.load(file)
-
-app= Flask(__name__, template_folder='templates')
-app.secret_key = "SanathWonder2466"
-
-# postgress SQL 
-
+# PostgreSQL connection
 conn = psycopg2.connect(
     host=os.getenv('PGHOST'),
     port=os.getenv('PGPORT'),
@@ -78,7 +37,34 @@ conn = psycopg2.connect(
     dbname=os.getenv('PGDATABASE')
 )
 
-@app.route('/signup',methods=['GET','POST'])
+# Download PDF and Load
+def get_pdf_from_url(url):
+    response = requests.get(url)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(response.content)
+        return tmp.name
+
+pdf_url = "https://raw.githubusercontent.com/Harishhrds/Asset_lifecycle_prediciton/main/Asset%20Chatbot.pdf"
+pdf_path = get_pdf_from_url(pdf_url)
+
+# PDF QA Setup
+loader = PyPDFLoader(pdf_path)
+docs = loader.load()
+splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+chunks = splitter.split_documents(docs)
+db = Chroma.from_documents(chunks, embedding=OpenAIEmbeddings())
+retriever = db.as_retriever()
+qa = RetrievalQA.from_chain_type(llm=ChatOpenAI(model="gpt-3.5-turbo"), chain_type="stuff", retriever=retriever)
+
+# Chat endpoint
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_msg = request.json["message"]
+    result = qa.run(user_msg)
+    return jsonify({"reply": result})
+
+# User signup
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         full_name = request.form.get('full_name')
@@ -86,29 +72,29 @@ def signup():
         username = request.form.get('username')
         password = request.form.get('password')
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE username=%s",(username,))
+        cur.execute("SELECT * FROM users WHERE username=%s", (username,))
         user = cur.fetchone()
         if user:
-            flash("User Already Exists!.Choose Another One") 
-            return render_template("signup.html")  
+            flash("User Already Exists! Choose Another One")
+            return render_template("signup.html")
         cur.execute("INSERT INTO users(full_name,phone,username,password) VALUES(%s,%s,%s,%s)",
-                    (full_name,phone,username,password))
+                    (full_name, phone, username, password))
         conn.commit()
         cur.close()
-        flash("Signup Successful.Please login")
+        flash("Signup Successful. Please login")
         return redirect(url_for('login'))
     return render_template('signup.html')
-@app.route('/login',methods=['GET','POST'])
+
+# Login route
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE username=%s AND password=%s", (username, password))
-
         user = cur.fetchone()
         cur.close()
-        # dummy db for username and password
         if user:
             session['username'] = username
             return redirect(url_for('home'))
@@ -116,39 +102,37 @@ def login():
             flash('Invalid username or password')
             return render_template('login.html')
     return render_template('login.html')
-# Route for main prediction page
+
+# Main page
 @app.route('/')
 def home():
     if "username" in session:
         return render_template('index.html')
-    return redirect(url_for('login'))         
-@app.route('/predict',methods=['POST'])
+    return redirect(url_for('login'))
+
+# Predict asset lifecycle
+@app.route('/predict', methods=['POST'])
 def predic():
     if not "username" in session:
         return redirect(url_for('login'))
     feature_names = [
-    'asset_age_years',
-    'total_usage_hours',
-    'num_repairs',
-    'last_maintenance_gap_days',
-    'performance_score'
-]
+        'asset_age_years',
+        'total_usage_hours',
+        'num_repairs',
+        'last_maintenance_gap_days',
+        'performance_score'
+    ]
     values = [float(x) for x in request.form.values()]
-    input_df = pd.DataFrame([values],columns=feature_names)
-
-    # make prediction 
+    input_df = pd.DataFrame([values], columns=feature_names)
     prediction = model.predict(input_df)
-    prediction_value = round(prediction[0],2)
-    
-    print("features",feature_names)
-    print("model prediction",prediction_value)
-    return render_template('index.html',prediction_text="prediction_value:{}".format(prediction_value))
-#Route to logout
+    prediction_value = round(prediction[0], 2)
+    return render_template('index.html', prediction_text=f"prediction_value: {prediction_value}")
+
+# Logout
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
 if __name__ == "__main__":
     app.run(debug=True)
-        
- 
