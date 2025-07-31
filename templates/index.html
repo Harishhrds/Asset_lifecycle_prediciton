@@ -252,6 +252,8 @@ font-family: 'Segoe UI', sans-serif;
   padding: 8px;
   border-radius: 8px;"><b>assistant:</b> ${data.reply}</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
+    }).then(data =>{
+       console.log("Chatbot reply from backend:", data.reply)
     })
     .catch(error => {
   chatBody.innerHTML += `<div style="color:red; margin:5px;"><b>assistant:</b> ${error.message}</div>`;
