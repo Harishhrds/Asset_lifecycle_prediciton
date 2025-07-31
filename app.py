@@ -57,7 +57,7 @@ def store_pdf_to_postgres(pdf_path,pdf_name):
     conn.close()
 
 # Example
-store_pdf_to_postgres("Asset_Chatbot.pdf", "Asset_Chatbot")
+store_pdf_to_postgres("Asset Chatbot.pdf", "Asset_Chatbot")
     
     
 
