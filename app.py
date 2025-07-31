@@ -122,8 +122,7 @@ qa = RetrievalQA.from_chain_type(llm=ChatOpenAI(model="gpt-3.5-turbo"), chain_ty
 # Chat endpoint
 @app.route("/chat", methods=["POST"])
 def chat():
-    if "username" not in session:
-        return jsonify({"reply": "Please log in to use the assistant."}), 401
+  
     
     try:
         user_msg = request.json.get("message", "")
