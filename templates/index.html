@@ -256,6 +256,7 @@ font-family: 'Segoe UI', sans-serif;
     .catch(error => {
   chatBody.innerHTML += `<div style="color:red; margin:5px;"><b>assistant:</b> ${error.message}</div>`;
 });
+  }
   document.getElementById("user-input").addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
       e.preventDefault(); // prevent form submission or newline
