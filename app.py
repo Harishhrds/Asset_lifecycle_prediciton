@@ -27,6 +27,14 @@ CORS(app)
 model_path = "asset_life.pkl"
 with open(model_path, 'rb') as file:
     model = pickle.load(file)
+def get_connection():
+    return psycopg2.connect(
+        host=os.getenv("PGHOST"),
+        port=os.getenv("PGPORT"),
+        user=os.getenv("PGUSER"),
+        password=os.getenv("PGPASSWORD"),
+        dbname=os.getenv("PGDATABASE")
+    )
 
 # PostgreSQL connection
 conn = psycopg2.connect(
@@ -115,6 +123,8 @@ def chat():
 # User signup
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    conn = get_connection()
+    cur = conn.cursor()
     if request.method == 'POST':
         full_name = request.form.get('full_name')
         phone = request.form.get('phone_number')
@@ -130,6 +140,7 @@ def signup():
                     (full_name, phone, username, password))
         conn.commit()
         cur.close()
+        conn.close()
         flash("Signup Successful. Please login")
         return redirect(url_for('login'))
     return render_template('signup.html')
@@ -137,6 +148,8 @@ def signup():
 # Login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    conn = get_connection()
+    cur = conn.cursor()
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -144,6 +157,7 @@ def login():
         cur.execute("SELECT * FROM users WHERE username=%s AND password=%s", (username, password))
         user = cur.fetchone()
         cur.close()
+        conn.close()
         if user:
             session['username'] = username
             return redirect(url_for('home'))
