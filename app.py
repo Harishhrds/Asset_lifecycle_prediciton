@@ -36,18 +36,53 @@ conn = psycopg2.connect(
     password=os.getenv('PGPASSWORD'),
     dbname=os.getenv('PGDATABASE')
 )
+cursor = conn.cursor()
+cursor.execute("""CREATE TABLE IF NOT EXISTS pdf_files(
+               id SERIAL PRIMARY_KEY,
+               name TEXT UNIQUE,
+               content BYTEA
+               )""")
+conn.commit()
+cursor.close()
+conn.close()
+def store_pdf_to_postgres(pdf_path,pdf_name):
+    with open(pdf_path,'rb') as file:
+        binary_data = file.read()
+    cursor.execute("""INSERT INTO pdf_files(name,content) 
+                  values (%s,%s) ON CONFLICT(name) 
+                  Do UPDATE SET content= EXCLUDE.content
+                  """,(pdf_name,binary_data))
+     conn.commit()
+    cursor.close()
+    conn.close()
 
-# Download PDF and Load
-def get_pdf_from_url(url):
-    response = requests.get(url)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(response.content)
-        return tmp.name
+# Example
+store_pdf_to_postgres("Asset_Chatbot.pdf", "Asset_Chatbot")
+    
+    
 
-pdf_url = "https://raw.githubusercontent.com/Harishhrds/Asset_lifecycle_prediciton/main/Asset%20Chatbot.pdf"
-pdf_path = get_pdf_from_url(pdf_url)
+def load_pdf_from_postgres(pdf_name):
 
-# PDF QA Setup
+    cursor = conn.cursor()
+    cursor.execute("SELECT content FROM pdf_files WHERE name = %s", (pdf_name,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not result:
+        raise ValueError("PDF not found in database")
+
+    pdf_binary = result[0]
+
+    # Save to temp file (e.g. /tmp on Render)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+        temp_file.write(pdf_binary)
+        temp_path = temp_file.name
+
+    return temp_path
+
+# Example
+pdf_path = load_pdf_from_postgres("Asset_Chatbot")
 loader = PyPDFLoader(pdf_path)
 docs = loader.load()
 splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
