@@ -240,16 +240,22 @@ font-family: 'Segoe UI', sans-serif;
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message })
     })
-    .then(res => res.json())
-    .then(data => {
-      console.log("Parsed response:", data);
-      chatBody.innerHTML += `<div style="background: black;
+    .then(async res => {
+   const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.reply || "Something went wrong");
+  }
+
+  console.log("Parsed response:", data);
+  chatBody.innerHTML += `<div style="background: black;
   margin: 5px;
   padding: 8px;
   border-radius: 8px;"><b>assistant:</b> ${data.reply}</div>`;
       chatBody.scrollTop = chatBody.scrollHeight;
-    });
-  }
+    })
+    .catch(error => {
+  chatBody.innerHTML += `<div style="color:red; margin:5px;"><b>assistant:</b> ${error.message}</div>`;
+});
   document.getElementById("user-input").addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
       e.preventDefault(); // prevent form submission or newline
