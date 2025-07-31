@@ -122,13 +122,20 @@ qa = RetrievalQA.from_chain_type(llm=ChatOpenAI(model="gpt-3.5-turbo"), chain_ty
 # Chat endpoint
 @app.route("/chat", methods=["POST"])
 def chat():
-    user_msg = request.json["message"]
-    # retrieved_docs = retriever.get_relevant_documents(user_msg)
-    # print(f"Retrieved {len(retrieved_docs)} docs for query: {user_msg}")
-    # for i, doc in enumerate(retrieved_docs):
-    #     print(f"[Doc {i}] {doc.page_content[:300]}...")
-    result = qa.run(user_msg)
-    return jsonify({"reply": result})
+    if "username" not in session:
+        return jsonify({"reply": "Please log in to use the assistant."}), 401
+    
+    try:
+        user_msg = request.json.get("message", "")
+        if not user_msg:
+            return jsonify({"reply": "Message cannot be empty."}), 400
+
+        result = qa.run(user_msg)
+        return jsonify({"reply": result})
+    except Exception as e:
+        print(f"[Chat Error] {e}")
+        return jsonify({"reply": "An internal error occurred. Try again later."}), 500
+
 
 # User signup
 @app.route('/signup', methods=['GET', 'POST'])
