@@ -108,11 +108,11 @@ pdf_path = load_pdf_from_postgres("Asset_Chatbot")
 loader = PyPDFLoader(pdf_path)
 docs = loader.load()
 print(f"Loaded {len(docs)} documents")
-for i, doc in enumerate(docs[:3]):
-    print(f"[Doc {i} preview] {doc.page_content[:300]}")
+for i, doc in enumerate(docs[:2]):
+    print(f"[Doc {i} preview] {doc.page_content[:100]}")
 print(f"OpenAI key found: {openai_api_key is not None}")
 
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
 chunks = splitter.split_documents(docs)
 persist_dir = "vectorstore"
 
