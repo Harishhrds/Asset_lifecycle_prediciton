@@ -135,10 +135,12 @@ def chat():
     
     try:
         user_msg = request.json.get("message", "")
+        print(user_msg)
         if not user_msg:
             return jsonify({"reply": "Message cannot be empty."}), 400
 
         result = qa.invoke({"query":user_msg})
+        console.log(result)
         return jsonify({"reply": result})
     except Exception as e:
         print(f"[Chat Error] {e}")
