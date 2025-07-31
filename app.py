@@ -123,10 +123,10 @@ qa = RetrievalQA.from_chain_type(llm=ChatOpenAI(model="gpt-3.5-turbo"), chain_ty
 @app.route("/chat", methods=["POST"])
 def chat():
     user_msg = request.json["message"]
-    retrieved_docs = retriever.get_relevant_documents(user_msg)
-    print(f"Retrieved {len(retrieved_docs)} docs for query: {user_msg}")
-    for i, doc in enumerate(retrieved_docs):
-        print(f"[Doc {i}] {doc.page_content[:300]}...")
+    # retrieved_docs = retriever.get_relevant_documents(user_msg)
+    # print(f"Retrieved {len(retrieved_docs)} docs for query: {user_msg}")
+    # for i, doc in enumerate(retrieved_docs):
+    #     print(f"[Doc {i}] {doc.page_content[:300]}...")
     result = qa.run(user_msg)
     return jsonify({"reply": result})
 
