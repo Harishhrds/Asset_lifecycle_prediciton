@@ -50,7 +50,7 @@ def store_pdf_to_postgres(pdf_path,pdf_name):
         binary_data = file.read()
     cursor.execute("""INSERT INTO pdf_files(name,content) 
                   values (%s,%s) ON CONFLICT(name) 
-                  Do UPDATE SET content= EXCLUDE.content
+                  Do UPDATE SET content= EXCLUDED.content
                   """,(pdf_name,binary_data))
     conn.commit()
     cursor.close()
