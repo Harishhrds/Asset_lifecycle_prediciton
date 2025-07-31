@@ -114,7 +114,16 @@ print(f"OpenAI key found: {openai_api_key is not None}")
 
 splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 chunks = splitter.split_documents(docs)
-db = Chroma.from_documents(chunks, embedding=OpenAIEmbeddings())
+persist_dir = "vectorstore"
+
+# Create or load existing vector DB
+if os.path.exists(persist_dir):
+    db = Chroma(persist_directory=persist_dir, embedding_function=OpenAIEmbeddings())
+else:
+    db = Chroma.from_documents(chunks, embedding=OpenAIEmbeddings(), persist_directory=persist_dir)
+    db.persist()
+
+qa = RetrievalQA.from_chain_type(llm=ChatOpenAI(), retriever=db.as_retriever())
 print(f"Stored {len(chunks)} chunks into vector store.")
 retriever = db.as_retriever()
 qa = RetrievalQA.from_chain_type(llm=ChatOpenAI(model="gpt-3.5-turbo"), chain_type="stuff", retriever=retriever)
@@ -129,7 +138,7 @@ def chat():
         if not user_msg:
             return jsonify({"reply": "Message cannot be empty."}), 400
 
-        result = qa.run(user_msg)
+        result = qa.invoke(user_msg)
         return jsonify({"reply": result})
     except Exception as e:
         print(f"[Chat Error] {e}")
