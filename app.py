@@ -52,7 +52,7 @@ def store_pdf_to_postgres(pdf_path,pdf_name):
                   values (%s,%s) ON CONFLICT(name) 
                   Do UPDATE SET content= EXCLUDE.content
                   """,(pdf_name,binary_data))
-     conn.commit()
+    conn.commit()
     cursor.close()
     conn.close()
 
