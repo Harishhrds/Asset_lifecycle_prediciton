@@ -38,7 +38,7 @@ conn = psycopg2.connect(
 )
 cursor = conn.cursor()
 cursor.execute("""CREATE TABLE IF NOT EXISTS pdf_files(
-               id SERIAL PRIMARY_KEY,
+               id SERIAL PRIMARY KEY,
                name TEXT UNIQUE,
                content BYTEA
                )""")
