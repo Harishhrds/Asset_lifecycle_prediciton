@@ -55,6 +55,7 @@ def store_pdf_to_postgres(pdf_path,pdf_name):
         password=os.getenv('PGPASSWORD'),
         dbname=os.getenv('PGDATABASE')
     )
+    cursor = conn.cursor()
     cursor.execute("""INSERT INTO pdf_files(name,content) 
                   values (%s,%s) ON CONFLICT(name) 
                   Do UPDATE SET content= EXCLUDED.content
