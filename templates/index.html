@@ -235,7 +235,7 @@ font-family: 'Segoe UI', sans-serif;
   border-radius: 8px;"><b>You:</b> ${message}</div>`;
     input.value = "";
   // this message sent via post request to backend api
-    fetch("http://localhost:5000/chat", {
+    fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message })
