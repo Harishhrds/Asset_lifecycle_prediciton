@@ -48,6 +48,13 @@ conn.close()
 def store_pdf_to_postgres(pdf_path,pdf_name):
     with open(pdf_path,'rb') as file:
         binary_data = file.read()
+    conn = psycopg2.connect(
+        host=os.getenv('PGHOST'),
+        port=os.getenv('PGPORT'),
+        user=os.getenv('PGUSER'),
+        password=os.getenv('PGPASSWORD'),
+        dbname=os.getenv('PGDATABASE')
+    )
     cursor.execute("""INSERT INTO pdf_files(name,content) 
                   values (%s,%s) ON CONFLICT(name) 
                   Do UPDATE SET content= EXCLUDED.content
@@ -62,7 +69,13 @@ store_pdf_to_postgres("Asset Chatbot.pdf", "Asset_Chatbot")
     
 
 def load_pdf_from_postgres(pdf_name):
-
+    conn = psycopg2.connect(
+        host=os.getenv('PGHOST'),
+        port=os.getenv('PGPORT'),
+        user=os.getenv('PGUSER'),
+        password=os.getenv('PGPASSWORD'),
+        dbname=os.getenv('PGDATABASE')
+    )
     cursor = conn.cursor()
     cursor.execute("SELECT content FROM pdf_files WHERE name = %s", (pdf_name,))
     result = cursor.fetchone()
