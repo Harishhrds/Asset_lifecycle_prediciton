@@ -6,10 +6,10 @@ services:
     startCommand: "gunicorn app:app"
     envVars:
       - key: PGHOST
-        value: dpg-d1oe80er433s73c8mpo0-a
+        value: dpg-d2japsvdiees73c09ajg-a
       - key: pGUSER
-        value: asset_db_mj7s_user
+        value: asset_db_mcav_user
       - key: PGPASSWORD
-        value: COv3fMv5rb2auV7qUFpf3XyiBex6qSsB
+        value: wtUYcIasEkpRhW94K9zG9y8mIkAm7KjY
       - key: PGDATABASE
-        value: asset_db_mj7s
+        value: asset_db_mcav
